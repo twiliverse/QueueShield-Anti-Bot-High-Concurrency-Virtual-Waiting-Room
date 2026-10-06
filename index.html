@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QueueShield — 3D Concert Floor Architecture</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Standalone Three.js (No external control scripts needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #030508;
+      color: #ffffff;
+      user-select: none;
+    }
+    #webgl-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+    .glass {
+      background: rgba(12, 14, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .weverse-gradient-text {
+      background: linear-gradient(135deg, #00d8a1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0, 216, 161, 0.4); border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <!-- 3D CANVAS -->
+  <div id="webgl-container"></div>
+
+  <!-- UI OVERLAY -->
+  <div class="relative z-10 w-full h-screen pointer-events-none flex flex-col justify-between">
+    
+    <!-- TOP HEADER -->
+    <header class="p-4 md:p-6 flex justify-between items-start w-full pointer-events-auto">
+      <div class="glass px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3.5 border-rose-500/20">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 to-purple-600 flex items-center justify-center font-extrabold text-white text-xl shadow-[0_0_20px_rgba(225,29,72,0.4)]">
+          Q
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg tracking-tight flex items-center gap-2">
+            Queue<span class="weverse-gradient-text font-black">Shield</span>
+          </h1>
+          <p class="text-[10px] text-gray-400 font-mono tracking-wider uppercase flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            Anti-Bot Concert Floor Engine
+          </p>
+        </div>
+      </div>
+
+      <!-- LIVE TELEMETRY -->
+      <div class="glass px-4 py-2.5 rounded-2xl hidden md:flex gap-5 items-center text-[10px] font-mono text-gray-400 border-white/10">
+        <div class="flex flex-col items-end"><span class="text-gray-500">QUEUE POSITION</span><strong class="text-white text-xs">84,219</strong></div>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="flex flex-col items-end"><span class="text-gray-500">BOTS DEFLECTED</span><strong class="text-rose-400 text-xs">12,402</strong></div>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="flex flex-col items-end"><span class="text-gray-500">CHECKOUT ADMITTANCE</span><strong class="text-[#00d8a1] text-xs">500 / sec</strong></div>
+      </div>
+    </header>
+
+    <!-- LEFT TELEMETRY PANEL -->
+    <main class="absolute left-4 md:left-6 top-28 w-80 md:w-84 pointer-events-auto flex flex-col transition-all duration-300" id="telemetry-panel">
+      <!-- Content populated by JS -->
+    </main>
+
+    <!-- BOTTOM WEVERSE CONTROLS -->
+    <footer class="w-full p-4 pointer-events-auto flex justify-center pb-6 md:pb-8">
+      <div class="glass px-2 py-2 rounded-2xl flex items-center gap-1.5 shadow-2xl border-white/10">
+        
+        <button onclick="switchView('floor')" id="btn-floor" class="nav-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 text-white font-semibold text-xs md:text-sm transition-all hover:bg-white/20">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-[#00d8a1]"></i>
+          <span class="hidden sm:block">Concert Floor</span>
+        </button>
+
+        <button onclick="switchView('shield')" id="btn-shield" class="nav-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-400 font-semibold text-xs md:text-sm transition-all hover:bg-white/10 hover:text-white">
+          <i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i>
+          <span class="hidden sm:block">Energy Barrier</span>
+        </button>
+
+        <button onclick="switchView('stage')" id="btn-stage" class="nav-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-400 font-semibold text-xs md:text-sm transition-all hover:bg-white/10 hover:text-white">
+          <i data-lucide="ticket" class="w-4 h-4 text-purple-400"></i>
+          <span class="hidden sm:block">Checkout Stage</span>
+        </button>
+
+        <button onclick="switchView('traffic')" id="btn-traffic" class="nav-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-gray-400 font-semibold text-xs md:text-sm transition-all hover:bg-white/10 hover:text-white relative">
+          <i data-lucide="activity" class="w-4 h-4 text-blue-400"></i>
+          <span class="hidden sm:block">Traffic Control</span>
+        </button>
+
+      </div>
+    </footer>
+  </div>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    lucide.createIcons();
+
+    // --- 1. UI SIDE PANEL RENDERER ---
+    const panel = document.getElementById('telemetry-panel');
+
+    const uiViews = {
+      floor: `
+        <div class="glass p-5 rounded-2xl border-[#00d8a1]/30">
+          <div class="w-10 h-10 bg-[#00d8a1]/10 rounded-xl flex items-center justify-center mb-3 border border-[#00d8a1]/30">
+            <i data-lucide="users" class="w-5 h-5 text-[#00d8a1]"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white mb-1">The Waiting Room</h2>
+          <p class="text-[11px] text-gray-300 leading-relaxed mb-4">
+            Legitimate fans (green) are assigned cryptographically signed queue tokens and placed in an orderly virtual line, preventing server stampedes.
+          </p>
+          <div class="space-y-2 font-mono text-[11px]">
+            <div class="flex justify-between border-b border-white/10 pb-1.5"><span class="text-gray-400">Algorithm</span><span class="text-[#00d8a1]">TOKEN BUCKET</span></div>
+            <div class="flex justify-between border-b border-white/10 pb-1.5"><span class="text-gray-400">Wait Time</span><span class="text-white">14 mins</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">State Engine</span><span class="text-purple-400">Redis Sorted Sets</span></div>
+          </div>
+        </div>
+      `,
+      shield: `
+        <div class="glass p-5 rounded-2xl border-rose-500/30">
+          <div class="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center mb-3 border border-rose-500/30">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-rose-400"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white mb-1">Anti-Bot Barrier</h2>
+          <p class="text-[11px] text-gray-300 leading-relaxed mb-4">
+            Scalper bots (red) are detected via erratic mouse entropy, extreme request velocity, and failed cryptographic Proof-of-Work checks. They bounce off the edge middleware.
+          </p>
+          <div class="bg-black/40 p-3 rounded-xl border border-rose-500/30 text-xs font-mono">
+            <div class="flex justify-between mb-1.5"><span class="text-gray-400">Mouse Entropy:</span><span class="text-rose-400 font-bold">FAILED</span></div>
+            <div class="flex justify-between mb-1.5"><span class="text-gray-400">IP Velocity:</span><span class="text-rose-400 font-bold">>50 req/s</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Action:</span><span class="text-white">403 FORBIDDEN</span></div>
+          </div>
+        </div>
+      `,
+      stage: `
+        <div class="glass p-5 rounded-2xl border-purple-500/30">
+          <div class="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center mb-3 border border-purple-500/30">
+            <i data-lucide="ticket" class="w-5 h-5 text-purple-400"></i>
+          </div>
+          <h2 class="text-xl font-bold text-white mb-1">Checkout Stage</h2>
+          <p class="text-[11px] text-gray-300 leading-relaxed mb-4">
+            The database stays healthy. The Leaky Bucket algorithm trickles users onto the actual Weverse Shop transaction stage at a perfectly steady, server-safe rate.
+          </p>
+          <div class="bg-black/60 p-3 rounded-xl border border-purple-500/30 font-mono text-[11px] space-y-1">
+            <div class="flex justify-between"><span class="text-gray-400">Admittance Rate:</span><span class="text-[#00d8a1] font-bold">500 / sec</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">DB CPU Load:</span><span class="text-white">42% (Stable)</span></div>
+            <div class="flex justify-between"><span class="text-gray-400">Transaction Status:</span><span class="text-purple-400">Crash-Free</span></div>
+          </div>
+        </div>
+      `,
+      traffic: `
+        <div class="glass p-5 rounded-2xl border-blue-500/30 relative overflow-hidden">
+          <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/20 blur-2xl rounded-full"></div>
+          <div class="relative z-10">
+            <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center mb-3 border border-blue-500/30">
+              <i data-lucide="activity" class="w-5 h-5 text-blue-400"></i>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-1">Traffic Topology</h2>
+            <p class="text-[11px] text-gray-300 leading-relaxed mb-4">
+              A top-down view of the middleware architecture. Bots remain outside the perimeter, while verified fan tokens are validated via EdDSA JWTs.
+            </p>
+            <button class="w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-lg text-xs font-bold transition shadow-lg shadow-blue-900/50">
+              Run k6 Load Test
+            </button>
+          </div>
+        </div>
+      `
+    };
+
+    panel.innerHTML = uiViews.floor;
+    lucide.createIcons();
+
+    // --- 2. THREE.JS 3D SCENE SETUP (CONCERT FLOOR METAPHOR) ---
+    const container = document.getElementById('webgl-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030508, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    
+    // Camera View Targets (Concert Room layout)
+    const camTargets = {
+      floor:   { pos: new THREE.Vector3(0, 8, 40), look: new THREE.Vector3(0, 2, 0) }, // Down the queue
+      shield:  { pos: new THREE.Vector3(15, 6, 10), look: new THREE.Vector3(0, 3, 0) }, // Side angle on barrier
+      stage:   { pos: new THREE.Vector3(0, 5, -12), look: new THREE.Vector3(0, 4, -40) }, // Behind shield, looking at checkout
+      traffic: { pos: new THREE.Vector3(0, 50, 10), look: new THREE.Vector3(0, 0, 0) } // Top-down schematic
+    };
+    
+    let currentCamPos = camTargets.floor.pos.clone();
+    let currentLookAt = camTargets.floor.look.clone();
+    camera.position.copy(currentCamPos);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // --- Native Mouse Drag Rotation Controls ---
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    window.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - previousMousePosition.x;
+      const deltaY = e.clientY - previousMousePosition.y;
+
+      const radius = currentCamPos.distanceTo(currentLookAt);
+      let theta = Math.atan2(currentCamPos.x - currentLookAt.x, currentCamPos.z - currentLookAt.z);
+      let phi = Math.acos(Math.max(-1, Math.min(1, (currentCamPos.y - currentLookAt.y) / radius)));
+
+      theta -= deltaX * 0.005;
+      phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.05, phi - deltaY * 0.005));
+
+      currentCamPos.x = currentLookAt.x + radius * Math.sin(phi) * Math.sin(theta);
+      currentCamPos.y = currentLookAt.y + radius * Math.cos(phi);
+      currentCamPos.z = currentLookAt.z + radius * Math.sin(phi) * Math.cos(theta);
+
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointerup', () => { isDragging = false; });
+
+    // --- 3. LIGHTS ---
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+    // Stage Spotlights
+    const stageLight1 = new THREE.SpotLight(0xa855f7, 4, 100, Math.PI/4, 0.5, 2);
+    stageLight1.position.set(-15, 20, -20);
+    stageLight1.target.position.set(0, 0, -40);
+    scene.add(stageLight1);
+    scene.add(stageLight1.target);
+
+    const stageLight2 = new THREE.SpotLight(0x3b82f6, 4, 100, Math.PI/4, 0.5, 2);
+    stageLight2.position.set(15, 20, -20);
+    stageLight2.target.position.set(0, 0, -40);
+    scene.add(stageLight2);
+    scene.add(stageLight2.target);
+
+    // --- 4. ROOM ARCHITECTURE ---
+
+    // The Floor (Concert Hall)
+    const floorGeo = new THREE.PlaneGeometry(100, 150);
+    const floorMat = new THREE.MeshStandardMaterial({ color: 0x0a0f1a, roughness: 0.1, metalness: 0.8 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    // Floor Grid lines
+    const grid = new THREE.GridHelper(100, 40, 0x1e293b, 0x1e293b);
+    grid.position.y = 0.01;
+    scene.add(grid);
+
+    // The Stage (Checkout Zone)
+    const stageGroup = new THREE.Group();
+    stageGroup.position.set(0, 0, -40);
+    scene.add(stageGroup);
+
+    const stagePlatform = new THREE.Mesh(
+      new THREE.CylinderGeometry(15, 15, 2, 32),
+      new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.5 })
+    );
+    stagePlatform.position.y = 1;
+    stageGroup.add(stagePlatform);
+
+    // Stage Core (The "Database/Inventory")
+    const dbCore = new THREE.Mesh(
+      new THREE.OctahedronGeometry(4, 2),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xa855f7, emissiveIntensity: 0.8, wireframe: true })
+    );
+    dbCore.position.y = 7;
+    stageGroup.add(dbCore);
+
+    // The Shield (Anti-Bot Energy Barrier)
+    const shieldGeo = new THREE.PlaneGeometry(60, 20);
+    const shieldMat = new THREE.MeshStandardMaterial({ 
+      color: 0x00d8a1, emissive: 0x00d8a1, emissiveIntensity: 0.3, transparent: true, opacity: 0.2, side: THREE.DoubleSide 
+    });
+    const shield = new THREE.Mesh(shieldGeo, shieldMat);
+    shield.position.set(0, 10, 0); // Positioned halfway
+    scene.add(shield);
+    
+    // Shield Laser Line at floor
+    const laserLine = new THREE.Mesh(
+      new THREE.BoxGeometry(60, 0.5, 0.5),
+      new THREE.MeshBasicMaterial({ color: 0x00d8a1 })
+    );
+    laserLine.position.set(0, 0.25, 0);
+    scene.add(laserLine);
+
+    // --- 5. TRAFFIC PARTICLES (FANS VS BOTS) ---
+    
+    // Legitimate Fans (Green, Orderly)
+    const fanGeo = new THREE.SphereGeometry(0.5, 16, 16);
+    const fanMat = new THREE.MeshBasicMaterial({ color: 0x00d8a1 });
+    const fans = [];
+
+    // Bots (Red, Chaotic)
+    const botGeo = new THREE.DodecahedronGeometry(0.5, 0);
+    const botMat = new THREE.MeshBasicMaterial({ color: 0xe11d48 });
+    const bots = [];
+
+    // Spawn logic
+    for(let i=0; i<60; i++) {
+      // Fan
+      const fan = new THREE.Mesh(fanGeo, fanMat);
+      fan.position.set((Math.random() - 0.5) * 20, 0.5, Math.random() * 50);
+      fan.userData = { speed: 0.05 + Math.random() * 0.05 };
+      scene.add(fan);
+      fans.push(fan);
+
+      // Bot
+      const bot = new THREE.Mesh(botGeo, botMat);
+      bot.position.set((Math.random() - 0.5) * 50, 0.5 + Math.random()*2, Math.random() * 40 + 5);
+      bot.userData = { speedX: (Math.random()-0.5)*0.5, speedZ: -0.1 - Math.random()*0.2 };
+      scene.add(bot);
+      bots.push(bot);
+    }
+
+    // --- 6. ANIMATION LOOP ---
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const time = clock.getElapsedTime();
+
+      // Animate Stage Core
+      dbCore.rotation.y = time * 0.5;
+      dbCore.position.y = 7 + Math.sin(time * 2) * 0.5;
+
+      // Animate Shield Pulse
+      shield.material.opacity = 0.15 + Math.sin(time * 4) * 0.05;
+
+      // Move Fans (Orderly towards stage)
+      fans.forEach(fan => {
+        fan.position.z -= fan.userData.speed;
+        
+        // If they pass the shield, they go straight to stage center
+        if (fan.position.z < 0) {
+          fan.position.x *= 0.98; // Converge to center
+        }
+
+        // Reset if they reach the stage
+        if (fan.position.z < -35) {
+          fan.position.set((Math.random() - 0.5) * 20, 0.5, 40 + Math.random() * 10);
+        }
+      });
+
+      // Move Bots (Chaotic, bouncing off shield)
+      bots.forEach(bot => {
+        bot.position.x += bot.userData.speedX;
+        bot.position.z += bot.userData.speedZ;
+        
+        bot.rotation.x += 0.1;
+        bot.rotation.y += 0.1;
+
+        // Bounce off side walls
+        if (bot.position.x > 30 || bot.position.x < -30) bot.userData.speedX *= -1;
+
+        // Bounce off QueueShield Energy Barrier (Z = 0)
+        if (bot.position.z < 2 && bot.position.z > 0) {
+          bot.userData.speedZ *= -1; // Deflect backward!
+          bot.position.z = 2.1;
+        }
+
+        // Reset if they fly too far back
+        if (bot.position.z > 60) {
+          bot.position.set((Math.random() - 0.5) * 50, 0.5 + Math.random()*2, Math.random() * 20 + 5);
+          bot.userData.speedZ = -0.1 - Math.random()*0.2;
+        }
+      });
+
+      // Smooth Camera Lerp
+      camera.position.lerp(currentCamPos, 0.04);
+      
+      // LookAt lerping workaround
+      const currentQuat = camera.quaternion.clone();
+      camera.lookAt(currentLookAt);
+      const targetQuat = camera.quaternion.clone();
+      camera.quaternion.copy(currentQuat);
+      camera.quaternion.slerp(targetQuat, 0.04);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // --- 7. SWITCH VIEW FUNCTION ---
+    window.switchView = function(view) {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-white/10', 'text-white', 'active');
+        btn.classList.add('text-gray-400');
+      });
+      const activeBtn = document.getElementById(`btn-${view}`);
+      activeBtn.classList.add('bg-white/10', 'text-white', 'active');
+      activeBtn.classList.remove('text-gray-400');
+
+      panel.style.opacity = 0;
+      setTimeout(() => {
+        panel.innerHTML = uiViews[view];
+        lucide.createIcons();
+        panel.style.opacity = 1;
+      }, 150);
+
+      currentCamPos = camTargets[view].pos.clone();
+      currentLookAt = camTargets[view].look.clone();
+    };
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
