@@ -29,7 +29,7 @@ When a user accesses the drop page, they do not hit the main application databas
 *   **The Waiting Room (Token Bucket):** Handles the initial burst of traffic, dropping excess requests at the CDN/Edge layer if the queue capacity exceeds 5 million concurrent connections.
 *   **The Admittance Valve (Leaky Bucket):** Drains the waiting room into the actual checkout application at a fixed, server-safe rate (e.g., 500 users per second). If the main checkout server CPU spikes, the admission rate dynamically throttles down.
 
-### 3. Real-Time Client Sync (WebSockets)
+### 3. Real-Time Client Sync (Web Sockets)
 Instead of clients polling the server every 5 seconds (which multiplies traffic), QueueShield uses WebSockets (Socket.io/Gorilla Websockets) to push live queue position updates and estimated wait times directly to the fan's screen.
 
 ### 4. Lightweight Anti-Bot Heuristics
