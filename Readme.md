@@ -16,7 +16,7 @@ During high-profile concert ticket sales or exclusive merchandise drops, monolit
 1. **The Thundering Herd Problem:** Millions of legitimate fans hit the checkout endpoints at the exact same millisecond, exhausting database connections and crashing the system.
 2. **Scalper Bots:** Automated scripts bypass UI constraints, hoard inventory, and lock out legitimate users.
 
-**Queue Shield** operates as a high-performance middleware layer. It intercepts incoming traffic, assigns cryptographically signed queue tokens via Redis, filters out non-human behavior, and admits users into the checkout flow at a strictly controlled, mathematically stable rate using Token Bucket and Leaky Bucket algorithms.
+**Queue Shield** operates as a high-performance middleware layer. It intercepts incoming traffic, assigns crypto graphically signed queue tokens via Redis, filters out non-human behavior, and admits users into the checkout flow at a strictly controlled, mathematically stable rate using Token Bucket and Leaky Bucket algorithms.
 
 ---
 
