@@ -1,4 +1,4 @@
-#  QueueShield — Anti-Bot Virtual Waiting Room & High-Concurrency Traffic Manager
+#  Queue Shield — Anti-Bot Virtual Waiting Room & High-Concurrency Traffic Manager
 
 > An enterprise-grade, real-time virtual queue and traffic shaping engine designed to protect high-demand e-commerce and ticketing platforms (like Weverse Shop) from scalper bots and server-crashing traffic spikes during exclusive dropsss.
 
